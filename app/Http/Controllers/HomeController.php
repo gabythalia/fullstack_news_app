@@ -19,15 +19,25 @@ class HomeController extends Controller
         $komunitasCategory = Category::where('name', 'komunitas')->first();
         $opiniCategory = Category::where('name', 'opini')->first();
 
+        $editorChoiceMain = $featureCategory ? News::where('category_id', $featureCategory->id)->latest()->first() : null;
+        $editorChoiceNews = $featureCategory ? News::where('category_id', $featureCategory->id)->latest()->take(5)->get() : collect();
+
+        $komunitasMain = $komunitasCategory ? News::where('category_id', $komunitasCategory->id)->latest()->first() : null;
+        $komunitasNews = $komunitasCategory ? News::where('category_id', $komunitasCategory->id)->latest()->take(5)->get() : collect();
+
+        $opiniMain = $opiniCategory ? News::where('category_id', $opiniCategory->id)->latest()->first() : null;
+        $opiniNews = $opiniCategory ? News::where('category_id', $opiniCategory->id)->latest()->take(5)->get() : collect();
+
+
         // Get news based on the categories
-        $editorChoiceMain = News::where('category_id', $featureCategory->id)->latest()->first();
-        $editorChoiceNews = News::where('category_id', $featureCategory->id)->latest()->take(5)->get();
+        // $editorChoiceMain = News::where('category_id', $featureCategory->id)->latest()->first();
+        // $editorChoiceNews = News::where('category_id', $featureCategory->id)->latest()->take(5)->get();
 
-        $komunitasMain = News::where('category_id', $komunitasCategory->id)->latest()->first();
-        $komunitasNews = News::where('category_id', $komunitasCategory->id)->latest()->take(5)->get();
+        // $komunitasMain = News::where('category_id', $komunitasCategory->id)->latest()->first();
+        // $komunitasNews = News::where('category_id', $komunitasCategory->id)->latest()->take(5)->get();
 
-        $opiniMain = News::where('category_id', $opiniCategory->id)->latest()->first();
-        $opiniNews = News::where('category_id', $opiniCategory->id)->latest()->take(5)->get();
+        // $opiniMain = News::where('category_id', $opiniCategory->id)->latest()->first();
+        // $opiniNews = News::where('category_id', $opiniCategory->id)->latest()->take(5)->get();
 
         $perPage = 6;
         $currentPage = LengthAwarePaginator::resolveCurrentPage();
@@ -77,5 +87,21 @@ class HomeController extends Controller
         $relatedNews = News::where('category_id', $newsItem->category_id)->where('id', '!=', $id)->take(3)->get();
 
         return view('user.detail', compact('newsItem', 'popularNews', 'categories', 'regions', 'relatedNews'));
+    }
+
+    // search
+    public function search(Request $request)
+    {
+        // dd($request->query());
+        $query = strtolower($request['query']);
+
+        // Query untuk mencari berdasarkan nama berita
+        $news = News::whereRaw('LOWER(title) LIKE ?', ['%' . $query . '%'])
+        ->latest()->get();
+
+        $popularNews = News::with('category')->orderBy('views', 'desc')->take(5)->get();
+        $categories = Category::all();
+        $regions = Region::all();
+        return view('user.search', compact('news','categories','regions','popularNews'));
     }
 }

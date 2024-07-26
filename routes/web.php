@@ -31,3 +31,6 @@ Route::prefix('admin')->middleware('auth')->name('admin.')->group(function () {
     Route::resource('users', UserController::class);
     Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
 });
+
+// search routes
+Route::get('/search', [HomeController::class, 'search'])->name('search');
